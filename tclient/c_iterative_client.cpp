@@ -45,6 +45,7 @@ int clientReadWrite(int skn)
      char buf[MAX],rec[MAX];
      fgets(buf,MAX,stdin);
      write(skn,buf,strlen(buf));
+     	printf("write success first time\n");
      while((n=read(skn,rec,MAX))>0)
      {
           rec[n]=0;

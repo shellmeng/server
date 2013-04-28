@@ -7,12 +7,12 @@ int main(int argc,char **argv)
      if(argc<2)
      {
           printf("usage: a IP \n");
-	  addr="127.0.0.1";
-        //  exit(0);
+	//  addr="127.0.0.1";
+          exit(0);
 	
      }
 
-     else
+     //else
      	addr=argv[1];
 
      int port=PORT;
