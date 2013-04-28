@@ -3,13 +3,18 @@
 
 int main(int argc,char **argv)
 {
+     char *addr;
      if(argc<2)
      {
           printf("usage: a IP \n");
-          exit(0);
+	  addr="127.0.0.1";
+        //  exit(0);
+	
      }
 
-     char *addr=argv[1];
+     else
+     	addr=argv[1];
+
      int port=PORT;
      int sockfd,n;
      sockfd=buildConnection( addr,port );
