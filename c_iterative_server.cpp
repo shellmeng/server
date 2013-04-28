@@ -1,9 +1,6 @@
 
 #include"c_iterative_server.h"
 
-#define MAX 1023
-#define LISTENQUE 10
-
 
 int buildConnection(int port)
 {
@@ -44,6 +41,7 @@ int echo(int conn)
           {
                return 0;
           }
+	  line[n]=0;
           write(conn,line,strlen(line));
      }
      printf("exit echo\n");

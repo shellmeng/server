@@ -12,13 +12,16 @@ int main()
      {
           connfd=accept(sockfd,NULL,NULL);
               
-          if((pid=fork())==0)
+	  echo(connfd);
+         /* if((pid=fork())==0)
           {
                close(sockfd);
                echo(connfd);
           }
           close(connfd);
+	  */
      }
+     close(sockfd);
 
 }     
 

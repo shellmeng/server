@@ -5,6 +5,7 @@
 
 #define MAX 1023
 #define LISTENQUE 10
+#define PORT 12346
 
 
 int buildConnection(int port);
