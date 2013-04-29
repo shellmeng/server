@@ -12,6 +12,7 @@
 #include<sys/time.h>
 
 
+
 void outerr(char * loc);
 
 #endif

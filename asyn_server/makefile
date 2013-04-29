@@ -1,6 +1,6 @@
 CC=g++
 CFLAGS=-g
-OBJS = c_asyn_server.o  c_asyn_main.cpp netHeader.o
+OBJS = netHeader.o c_asyn_server.o c_asyn_main.cpp 
 TARGET = asyn_server
 RM=rm -f
 
@@ -11,6 +11,6 @@ $(OBJS): %.o:%.cpp
 	$(CC) -c $(CFLAGS) $< -o $@
 
 clean:
-	-$(RM) $(TARGET) $(OBJS)
+	-$(RM) $(TARGET) *.o
 
 
