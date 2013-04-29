@@ -43,16 +43,37 @@ int clientReadWrite(int skn)
      // to do
      int n;
      char buf[MAX],rec[MAX];
-     fgets(buf,MAX,stdin);
+
+
+
+     srand(time(NULL));
+
+     int num=rand()%(MAX-1);
+
+     for(int i=0;i<num;i++)
+	     buf[i]='a'+ rand()%26;
+     buf[num]=0;
+     puts(buf);
+     printf("\n");
+    // fgets(buf,MAX,stdin);
      write(skn,buf,strlen(buf));
-     	printf("write success first time\n");
+     //	printf("write success first time\n");
      while((n=read(skn,rec,MAX))>0)
      {
           rec[n]=0;
           if(fputs(rec,stdout)==EOF)
                printf("puts error\n");
+	  printf("\n");
 	//printf("exit while in clientRW\n");
-     	fgets(buf,MAX,stdin);
+	  srand(time(NULL));
+          num=rand()%(MAX-1);
+ 
+          for(int i=0;i<num;i++)
+	       buf[i]='a'+ rand()%26;
+          buf[num]=0;
+          puts(buf);
+          printf("\n");
+     //	fgets(buf,MAX,stdin);
      	write(skn,buf,strlen(buf));
      }
      if(n<0)

@@ -9,6 +9,10 @@
 #include<arpa/inet.h>
 #include<error.h>
 #include<unistd.h>
+#include<sys/wait.h>
+
+#include<time.h>
+
 
 void outerr(char * loc);
 

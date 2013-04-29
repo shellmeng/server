@@ -1,0 +1,75 @@
+!_TAG_FILE_FORMAT	2	/extended format; --format=1 will not append ;" to lines/
+!_TAG_FILE_SORTED	1	/0=unsorted, 1=sorted, 2=foldcase/
+!_TAG_PROGRAM_AUTHOR	Darren Hiebert	/dhiebert@users.sourceforge.net/
+!_TAG_PROGRAM_NAME	Exuberant Ctags	//
+!_TAG_PROGRAM_URL	http://ctags.sourceforge.net	/official site/
+!_TAG_PROGRAM_VERSION	5.8	//
+CC	asyn_server/makefile	/^CC=g++$/;"	m
+CC	client/makefile	/^CC=g++$/;"	m
+CC	iterative_server/makefile	/^CC=g++$/;"	m
+CC	makefile	/^CC=g++$/;"	m
+CC	tclient/makefile	/^CC=g++$/;"	m
+CFLAGS	asyn_server/makefile	/^CFLAGS=-g$/;"	m
+CFLAGS	client/makefile	/^CFLAGS=-g$/;"	m
+CFLAGS	iterative_server/makefile	/^CFLAGS=-g$/;"	m
+CFLAGS	makefile	/^CFLAGS=-g$/;"	m
+CFLAGS	tclient/makefile	/^CFLAGS=-g$/;"	m
+C_ITERATIVE_CLIENT_H	client/c_iterative_client.h	2;"	d
+C_ITERATIVE_CLIENT_H	tclient/c_iterative_client.h	2;"	d
+C_ITERATIVE_SERVER_H	asyn_server/c_asyn_server.h	3;"	d
+C_ITERATIVE_SERVER_H	c_iterative_server.h	3;"	d
+C_ITERATIVE_SERVER_H	iterative_server/c_iterative_server.h	3;"	d
+LISTENQUE	asyn_server/c_asyn_server.h	7;"	d
+LISTENQUE	c_iterative_server.h	7;"	d
+LISTENQUE	iterative_server/c_iterative_server.h	7;"	d
+MAX	asyn_server/c_asyn_server.h	6;"	d
+MAX	c_iterative_server.h	6;"	d
+MAX	iterative_server/c_iterative_server.h	6;"	d
+MAX	tclient/c_iterative_client.h	5;"	d
+NETHEADER_H	asyn_server/netHeader.h	2;"	d
+NETHEADER_H	client/netHeader.h	2;"	d
+NETHEADER_H	iterative_server/netHeader.h	2;"	d
+NETHEADER_H	netHeader.h	2;"	d
+NETHEADER_H	tclient/netHeader.h	2;"	d
+OBJS	asyn_server/makefile	/^OBJS = c_asyn_server.o  c_asyn_main.cpp netHeader.o$/;"	m
+OBJS	client/makefile	/^OBJS = solution.o plant.o main.o eleNet.o instance.o algorithmForPower.o random.o context.o$/;"	m
+OBJS	iterative_server/makefile	/^OBJS = c_iterative_server.o  c_iterative_main.cpp netHeader.o$/;"	m
+OBJS	makefile	/^OBJS = c_iterative_server.o  c_iterative_main.cpp netHeader.o$/;"	m
+OBJS	tclient/makefile	/^OBJS = c_iterative_client.o  c_iterative_client_main.cpp netHeader.o$/;"	m
+PORT	asyn_server/c_asyn_server.h	8;"	d
+PORT	c_iterative_server.h	8;"	d
+PORT	iterative_server/c_iterative_server.h	8;"	d
+PORT	tclient/c_iterative_client.h	6;"	d
+RM	asyn_server/makefile	/^RM=rm -f$/;"	m
+RM	client/makefile	/^RM=rm -f$/;"	m
+RM	iterative_server/makefile	/^RM=rm -f$/;"	m
+RM	makefile	/^RM=rm -f$/;"	m
+RM	tclient/makefile	/^RM=rm -f$/;"	m
+TARGET	asyn_server/makefile	/^TARGET = asyn_server$/;"	m
+TARGET	client/makefile	/^TARGET = power$/;"	m
+TARGET	iterative_server/makefile	/^TARGET = iter_server$/;"	m
+TARGET	makefile	/^TARGET = iter_server$/;"	m
+TARGET	tclient/makefile	/^TARGET = iter_client$/;"	m
+buildConnection	asyn_server/c_asyn_server.cpp	/^int buildConnection(int port)$/;"	f
+buildConnection	c_iterative_server.cpp	/^int buildConnection(int port)$/;"	f
+buildConnection	client/c_iterative_client.cpp	/^int buildConnection(char * addr,int port)$/;"	f
+buildConnection	iterative_server/c_iterative_server.cpp	/^int buildConnection(int port)$/;"	f
+buildConnection	tclient/c_iterative_client.cpp	/^int buildConnection(char * addr,int port)$/;"	f
+clientReadWrite	client/c_iterative_client.cpp	/^int clientReadWrite(int skn)$/;"	f
+clientReadWrite	tclient/c_iterative_client.cpp	/^int clientReadWrite(int skn)$/;"	f
+echo	asyn_server/c_asyn_server.cpp	/^int echo(int conn)$/;"	f
+echo	c_iterative_server.cpp	/^int echo(int conn)$/;"	f
+echo	iterative_server/c_iterative_server.cpp	/^int echo(int conn)$/;"	f
+exps	asyn_server/c_asyn_server.cpp	/^fd_set rds,wts,exps;$/;"	v
+main	asyn_server/c_asyn_main.cpp	/^int main()$/;"	f
+main	c_iterative_main.cpp	/^int main()$/;"	f
+main	client/c_iterative_client_main.cpp	/^int main(int argc,char **argv)$/;"	f
+main	iterative_server/c_iterative_main.cpp	/^int main()$/;"	f
+main	tclient/c_iterative_client_main.cpp	/^int main(int argc,char **argv)$/;"	f
+outerr	asyn_server/netHeader.cpp	/^void outerr(char * loc)$/;"	f
+outerr	client/netHeader.h	/^void outerr(char * loc)$/;"	f
+outerr	iterative_server/netHeader.cpp	/^void outerr(char * loc)$/;"	f
+outerr	netHeader.cpp	/^void outerr(char * loc)$/;"	f
+outerr	tclient/netHeader.cpp	/^void outerr(char * loc)$/;"	f
+rds	asyn_server/c_asyn_server.cpp	/^fd_set rds,wts,exps;$/;"	v
+wts	asyn_server/c_asyn_server.cpp	/^fd_set rds,wts,exps;$/;"	v
