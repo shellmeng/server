@@ -5,6 +5,10 @@ int main()
 
      printf("start server\n");
      int sockfd,connfd,n;
+     int conn2fd;
+
+     int conns[MAX];
+     int curConnNum=0;
      pid_t pid;
      fd_set rds,wts,exps;
      int maxfd=0;
@@ -20,8 +24,12 @@ int main()
      while(true)
      {
 	  printf("waiting\n");
-          connfd=accept(sockfd,NULL,NULL);
-	  printf("connected from client %d\n",connfd);
+          conns[0]=accept(sockfd,NULL,NULL);
+	  if(conns[0]>0)
+	  {
+		  curConnNum++;
+		  printf("connected from client %d\n",conns[0]);
+	  }
 
 	  while(1)
 	  {
@@ -29,12 +37,17 @@ int main()
 	  FD_SET(0,&rds);
 	  maxfd=0;
 
+	  FD_SET(sockfd,&rds);
+	  if(sockfd>maxfd)
+		  maxfd=sockfd;
 	  tv.tv_sec=1;
 	  tv.tv_usec=10;
-	  FD_SET(connfd,&rds);
-	  if(connfd>maxfd)
-		  maxfd=connfd;
-
+	  for(int i=0;i<curConnNum;i++)
+		 {
+			 FD_SET(conns[i],&rds);
+			 if(conns[i]>maxfd)
+				 maxfd=conns[i];
+		 }
 	  ret=select(maxfd+1,&rds,NULL,NULL,&tv);
 	  //ret=select(maxfd+1,&rds,NULL,NULL,NULL);
 
@@ -45,12 +58,12 @@ int main()
 	  }
 	  else if (ret==0)
 	  {
-		  outerr("select return 0, no data ready,continue");
+		//  outerr("select return 0, no data ready,continue");
 		  continue;
 	  }
 	  else
 	  {
-		  printf("herre");
+		//  printf("herre");
 		  
 		  if(FD_ISSET(0,&rds))
 		  {
@@ -63,20 +76,34 @@ int main()
 			  else
 				  outerr("error in send\n");
 		  }
-		  if(FD_ISSET(connfd,&rds))
+		  for(int i=0;i<curConnNum;i++)
 		  {
-			  memset(rec,0,MAX);
-			  n=read(connfd,rec,MAX);
-			  if(n>0)
+			  if(FD_ISSET(conns[i],&rds))
 			  {
-				  rec[n]=0;
-				  fputs(rec,stdout);
+				  memset(rec,0,MAX);
+				  n=read(conns[i],rec,MAX);
+				  if(n>0)
+				  {
+					  rec[n]=0;
+					  fputs(rec,stdout);
+				  }
+				  len=write(conns[i],rec,strlen(rec));
+				  if(len>0)
+					  printf("send success\n");
+				  else
+					  outerr("error in send\n");
 			  }
-			  len=write(connfd,rec,strlen(rec));
-			  if(len>0)
-				  printf("send success\n");
-			  else
-				  outerr("error in send\n");
+		  }
+
+		  if(FD_ISSET(sockfd,&rds))
+		  {
+
+			  conns[curConnNum]=accept(sockfd,NULL,NULL);
+			  if(conns[curConnNum]>0)
+			  {
+				  curConnNum++;
+				  printf("a new client connected\n");
+			  }
 		  }
 	  }
 	  	
