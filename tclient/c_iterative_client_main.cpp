@@ -46,14 +46,19 @@ int main(int argc,char **argv)
 			  printf("***********************************%d*******\n",count);
 			  clientReadWrite(clientsocks[i]);
 		     }
+		     close(clientsocks[i]);
 		     exit(0);
 
+	     }
+	     else
+	     {
+		     close(clientsocks[i]);
 	     }
 
      
      }
 
-//     sleep(15);
+     sleep(3);
      for(int i=0;i<FORKNUM;i++)
 	     wait(NULL);
 

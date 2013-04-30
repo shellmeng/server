@@ -48,7 +48,7 @@ int clientReadWrite(int skn)
 
 
 
-     int num=rand()%(MAX/20-1)+3;
+     int num=rand()%(MAX/10-1)+3;
 
 //     printf("the num is %d**********************************\n",num);
      for(int i=0;i<num;i++)
