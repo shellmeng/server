@@ -1,0 +1,281 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>/mnt/hgfs/linux/myserver/server/asyn_server/c_asyn_server.cpp.html</title>
+<meta name="Generator" content="Vim/7.2">
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+</head>
+<body bgcolor="#ffffff" text="#000000"><font face="monospace">
+<font color="#ffff00">&nbsp;&nbsp;1 </font><br>
+<font color="#ffff00">&nbsp;&nbsp;2 </font><font color="#ff40ff">#include</font><font color="#ff6060">&quot;c_asyn_server.h&quot;</font><br>
+<font color="#ffff00">&nbsp;&nbsp;3 </font>fd_set rds,wts,exps;<br>
+<font color="#ffff00">&nbsp;&nbsp;4 </font><font color="#00ff00">int</font>&nbsp;conns[MAX];<br>
+<font color="#ffff00">&nbsp;&nbsp;5 </font><font color="#00ff00">char</font>&nbsp;** bufsRead=(<font color="#00ff00">char</font>&nbsp;**)malloc(<font color="#ffff00">sizeof</font>(<font color="#00ff00">char</font>&nbsp;*) *MAX);<br>
+<font color="#ffff00">&nbsp;&nbsp;6 </font><font color="#00ff00">char</font>&nbsp;** bufsWrite=(<font color="#00ff00">char</font>&nbsp;**)malloc(<font color="#ffff00">sizeof</font>(<font color="#00ff00">char</font>&nbsp;*) *MAX);<br>
+<font color="#ffff00">&nbsp;&nbsp;7 </font><font color="#00ff00">int</font>&nbsp;curConnNum=<font color="#ff6060">0</font>;<br>
+<font color="#ffff00">&nbsp;&nbsp;8 </font><br>
+<font color="#ffff00">&nbsp;&nbsp;9 </font><font color="#00ff00">int</font>&nbsp;buildConnection(<font color="#00ff00">int</font>&nbsp;port)<br>
+<font color="#ffff00">&nbsp;10 </font>{<br>
+<font color="#ffff00">&nbsp;11 </font>&nbsp;&nbsp;&nbsp;&nbsp; <font color="#00ff00">int</font>&nbsp;sockfd;<br>
+<font color="#ffff00">&nbsp;12 </font>&nbsp;&nbsp;&nbsp;&nbsp; <font color="#00ff00">struct</font>&nbsp;sockaddr_in server,client;<br>
+<font color="#ffff00">&nbsp;13 </font><br>
+<font color="#ffff00">&nbsp;14 </font>&nbsp;&nbsp;&nbsp;&nbsp; <font color="#ffff00">if</font>&nbsp;((sockfd=socket(AF_INET,SOCK_STREAM,<font color="#ff6060">0</font>))&lt;<font color="#ff6060">0</font>)<br>
+<font color="#ffff00">&nbsp;15 </font>&nbsp;&nbsp;&nbsp;&nbsp; {<br>
+<font color="#ffff00">&nbsp;16 </font>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;outerr(<font color="#ff6060">&quot;new socket error in server</font><font color="#ff40ff">\n</font><font color="#ff6060">&quot;</font>);<br>
+<font color="#ffff00">&nbsp;17 </font>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;exit(-<font color="#ff6060">1</font>);<br>
+<font color="#ffff00">&nbsp;18 </font>&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+<font color="#ffff00">&nbsp;19 </font><br>
+<font color="#ffff00">&nbsp;20 </font>&nbsp;&nbsp;&nbsp;&nbsp; bzero(&amp;server,<font color="#ffff00">sizeof</font>(server));<br>
+<font color="#ffff00">&nbsp;21 </font><br>
+<font color="#ffff00">&nbsp;22 </font>&nbsp;&nbsp;&nbsp;&nbsp; server.sin_family=AF_INET;<br>
+<font color="#ffff00">&nbsp;23 </font>&nbsp;&nbsp;&nbsp;&nbsp; server.sin_port=htons(port);<br>
+<font color="#ffff00">&nbsp;24 </font>&nbsp;&nbsp;&nbsp;&nbsp; server.sin_addr.s_addr=htonl(INADDR_ANY);<br>
+<font color="#ffff00">&nbsp;25 </font>&nbsp;&nbsp;&nbsp;&nbsp;<br>
+<font color="#ffff00">&nbsp;26 </font>&nbsp;&nbsp;&nbsp;&nbsp; bind(sockfd,(<font color="#00ff00">struct</font>&nbsp;sockaddr*)&amp;server,<font color="#ffff00">sizeof</font>(server));<br>
+<font color="#ffff00">&nbsp;27 </font>&nbsp;&nbsp;&nbsp;&nbsp; setsockopt(sockfd,SOL_SOCKET ,SO_REUSEADDR,(<font color="#00ff00">const</font>&nbsp;<font color="#00ff00">char</font>*)&amp;server,<font color="#ffff00">sizeof</font>(<font color="#00ff00">bool</font>));<br>
+<font color="#ffff00">&nbsp;28 </font>&nbsp;&nbsp;&nbsp;&nbsp; listen(sockfd,LISTENQUE);<br>
+<font color="#ffff00">&nbsp;29 </font><br>
+<font color="#ffff00">&nbsp;30 </font>&nbsp;&nbsp;&nbsp;&nbsp; <font color="#ffff00">return</font>&nbsp;sockfd;<br>
+<font color="#ffff00">&nbsp;31 </font><br>
+<font color="#ffff00">&nbsp;32 </font>}<br>
+<font color="#ffff00">&nbsp;33 </font><br>
+<font color="#ffff00">&nbsp;34 </font><br>
+<font color="#ffff00">&nbsp;35 </font><br>
+<font color="#ffff00">&nbsp;36 </font><font color="#8080ff">/*</font><font color="#8080ff">int echo(int conn)</font><br>
+<font color="#ffff00">&nbsp;37 </font><font color="#8080ff">{</font><br>
+<font color="#ffff00">&nbsp;38 </font><font color="#8080ff">&nbsp;&nbsp;&nbsp;&nbsp; int n;</font><br>
+<font color="#ffff00">&nbsp;39 </font><br>
+<font color="#ffff00">&nbsp;40 </font><font color="#8080ff">&nbsp;&nbsp;&nbsp;&nbsp; char line[MAX];</font><br>
+<font color="#ffff00">&nbsp;41 </font><font color="#8080ff">&nbsp;&nbsp;&nbsp;&nbsp; int count=0;</font><br>
+<font color="#ffff00">&nbsp;42 </font><font color="#8080ff">&nbsp;&nbsp;&nbsp;&nbsp; while(true)</font><br>
+<font color="#ffff00">&nbsp;43 </font><font color="#8080ff">&nbsp;&nbsp;&nbsp;&nbsp; {</font><br>
+<font color="#ffff00">&nbsp;44 </font><font color="#8080ff">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;printf(&quot;%d\n&quot;,count++);</font><br>
+<font color="#ffff00">&nbsp;45 </font><font color="#8080ff">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;n=read(conn,line,MAX);</font><br>
+<font color="#ffff00">&nbsp;46 </font><font color="#8080ff">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;printf(&quot;server: n=%d\n&quot;,n);</font><br>
+<font color="#ffff00">&nbsp;47 </font><font color="#8080ff">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if(n==0)</font><br>
+<font color="#ffff00">&nbsp;48 </font><font color="#8080ff">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{</font><br>
+<font color="#ffff00">&nbsp;49 </font><font color="#8080ff">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return 0;</font><br>
+<font color="#ffff00">&nbsp;50 </font><font color="#8080ff">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}</font><br>
+<font color="#ffff00">&nbsp;51 </font><font color="#8080ff">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;line[n]=0;</font><br>
+<font color="#ffff00">&nbsp;52 </font><font color="#8080ff">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;write(conn,line,strlen(line));</font><br>
+<font color="#ffff00">&nbsp;53 </font><font color="#8080ff">&nbsp;&nbsp;&nbsp;&nbsp; }</font><br>
+<font color="#ffff00">&nbsp;54 </font><font color="#8080ff">&nbsp;&nbsp;&nbsp;&nbsp; printf(&quot;exit echo\n&quot;);</font><br>
+<font color="#ffff00">&nbsp;55 </font><font color="#8080ff">}</font><br>
+<font color="#ffff00">&nbsp;56 </font><font color="#8080ff">*/</font><br>
+<font color="#ffff00">&nbsp;57 </font><font color="#8080ff">/*</font><br>
+<font color="#ffff00">&nbsp;58 </font><font color="#8080ff">&nbsp;copy the data from bufsRead[i] to bufsWrite[i]</font><br>
+<font color="#ffff00">&nbsp;59 </font><font color="#8080ff">&nbsp;always return 1 because the operation is so easy and error is hard to make</font><br>
+<font color="#ffff00">&nbsp;60 </font><font color="#8080ff">&nbsp;</font><font color="#8080ff">*/</font><br>
+<font color="#ffff00">&nbsp;61 </font><font color="#00ff00">int</font>&nbsp;handleData(<font color="#00ff00">int</font>&nbsp;clientNum)<br>
+<font color="#ffff00">&nbsp;62 </font>{<br>
+<font color="#ffff00">&nbsp;63 </font>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;memset(bufsWrite[clientNum],<font color="#ff6060">0</font>,MAX);<br>
+<font color="#ffff00">&nbsp;64 </font>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;memcpy(bufsWrite[clientNum],bufsRead[clientNum],strlen(bufsRead[clientNum]) );<br>
+<font color="#ffff00">&nbsp;65 </font>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<font color="#ffff00">return</font>&nbsp;<font color="#ff6060">1</font>;<br>
+<font color="#ffff00">&nbsp;66 </font>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<br>
+<font color="#ffff00">&nbsp;67 </font>}<br>
+<font color="#ffff00">&nbsp;68 </font><font color="#8080ff">/*</font><font color="#8080ff">&nbsp;</font><br>
+<font color="#ffff00">&nbsp;69 </font><font color="#8080ff">receive data from socket conns[clientNum], and the data are stored in the bufsRead[clientNum] </font><br>
+<font color="#ffff00">&nbsp;70 </font><font color="#8080ff">return 1 if everything is ok</font><br>
+<font color="#ffff00">&nbsp;71 </font><font color="#8080ff">return -1 is there is somethign wrong ,but wouldn't exit</font><br>
+<font color="#ffff00">&nbsp;72 </font><font color="#8080ff">&nbsp;</font><font color="#8080ff">*/</font><br>
+<font color="#ffff00">&nbsp;73 </font><font color="#00ff00">int</font>&nbsp;receiveData(<font color="#00ff00">int</font>&nbsp;clientNum)<br>
+<font color="#ffff00">&nbsp;74 </font>{<br>
+<font color="#ffff00">&nbsp;75 </font><br>
+<font color="#ffff00">&nbsp;76 </font>&nbsp;&nbsp;<font color="#00ff00">int</font>&nbsp;ret;<br>
+<font color="#ffff00">&nbsp;77 </font>&nbsp;&nbsp;<font color="#00ff00">int</font>&nbsp;n;<br>
+<font color="#ffff00">&nbsp;78 </font>&nbsp;&nbsp;memset(bufsRead[clientNum],<font color="#ff6060">0</font>,MAX);<br>
+<font color="#ffff00">&nbsp;79 </font>&nbsp;&nbsp;n=read(conns[clientNum],bufsRead[clientNum],MAX-<font color="#ff6060">1</font>);<br>
+<font color="#ffff00">&nbsp;80 </font>&nbsp;&nbsp;<font color="#ffff00">if</font>(n&gt;<font color="#ff6060">0</font>)<br>
+<font color="#ffff00">&nbsp;81 </font>&nbsp;&nbsp;{<br>
+<font color="#ffff00">&nbsp;82 </font>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;bufsRead[clientNum][n]=<font color="#ff6060">0</font>;<br>
+<font color="#ffff00">&nbsp;83 </font>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;puts(bufsRead[clientNum]);<br>
+<font color="#ffff00">&nbsp;84 </font>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ret=handleData(clientNum);<br>
+<font color="#ffff00">&nbsp;85 </font>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<font color="#ffff00">if</font>(ret!=<font color="#ff6060">1</font>)<br>
+<font color="#ffff00">&nbsp;86 </font>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{<br>
+<font color="#ffff00">&nbsp;87 </font>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;outerr(<font color="#ff6060">&quot;error in hanleData&quot;</font>);<br>
+<font color="#ffff00">&nbsp;88 </font>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;exit(<font color="#ff6060">0</font>);<br>
+<font color="#ffff00">&nbsp;89 </font>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}<br>
+<font color="#ffff00">&nbsp;90 </font>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<font color="#ffff00">return</font>&nbsp;<font color="#ff6060">1</font>;<br>
+<font color="#ffff00">&nbsp;91 </font>&nbsp;&nbsp;}<br>
+<font color="#ffff00">&nbsp;92 </font>&nbsp;&nbsp;<font color="#ffff00">else</font><br>
+<font color="#ffff00">&nbsp;93 </font>&nbsp;&nbsp;{<br>
+<font color="#ffff00">&nbsp;94 </font><br>
+<font color="#ffff00">&nbsp;95 </font>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;outerr(<font color="#ff6060">&quot;the receive didnot received data&quot;</font>);<br>
+<font color="#ffff00">&nbsp;96 </font>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<font color="#ffff00">return</font>&nbsp;-<font color="#ff6060">1</font>;<br>
+<font color="#ffff00">&nbsp;97 </font>&nbsp;&nbsp;}<br>
+<font color="#ffff00">&nbsp;98 </font>}<br>
+<font color="#ffff00">&nbsp;99 </font><br>
+<font color="#ffff00">100 </font><font color="#00ff00">int</font>&nbsp;sendData(<font color="#00ff00">int</font>&nbsp;clientNum)<br>
+<font color="#ffff00">101 </font>{<br>
+<font color="#ffff00">102 </font>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;printf(<font color="#ff6060">&quot;in sendData</font><font color="#ff40ff">\n</font><font color="#ff6060">&quot;</font>);<br>
+<font color="#ffff00">103 </font>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<font color="#00ff00">char</font>&nbsp;* start=bufsWrite[clientNum];<br>
+<font color="#ffff00">104 </font>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<font color="#00ff00">int</font>&nbsp;n=<font color="#ff6060">0</font>;<br>
+<font color="#ffff00">105 </font>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<font color="#ffff00">if</font>(strlen(start)&gt;<font color="#ff6060">0</font>)<br>
+<font color="#ffff00">106 </font>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<font color="#8080ff">//n=write(conns[clientNum],bufWrite[clientNum],strlen(bufWrite[clientNum];</font><br>
+<font color="#ffff00">107 </font>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{<br>
+<font color="#ffff00">108 </font>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;printf(<font color="#ff6060">&quot;the data in bufs is</font><font color="#ff40ff">\n</font><font color="#ff6060">&quot;</font>);<br>
+<font color="#ffff00">109 </font>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;puts(start);<br>
+<font color="#ffff00">110 </font>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;n=write(conns[clientNum],start,strlen(start));<br>
+<font color="#ffff00">111 </font>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<font color="#ffff00">if</font>(n==strlen(start) )<br>
+<font color="#ffff00">112 </font>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{<br>
+<font color="#ffff00">113 </font>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;printf(<font color="#ff6060">&quot;yes, all sended</font><font color="#ff40ff">\n</font><font color="#ff6060">&quot;</font>);<br>
+<font color="#ffff00">114 </font>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;bufsWrite[clientNum][<font color="#ff6060">0</font>]=<font color="#ff6060">0</font>;<br>
+<font color="#ffff00">115 </font>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}<br>
+<font color="#ffff00">116 </font>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<font color="#ffff00">else</font>&nbsp;<font color="#ffff00">if</font>(n&gt;<font color="#ff6060">0</font>&nbsp;&amp;&amp;n&lt;strlen(start))<br>
+<font color="#ffff00">117 </font>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{<br>
+<font color="#ffff00">118 </font>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;start+=n;<br>
+<font color="#ffff00">119 </font>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;memcpy(bufsWrite[clientNum],start,strlen(start));<br>
+<font color="#ffff00">120 </font>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;printf(<font color="#ff6060">&quot;partly sended</font><font color="#ff40ff">\n</font><font color="#ff6060">&quot;</font>);<br>
+<font color="#ffff00">121 </font>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}<br>
+<font color="#ffff00">122 </font>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<font color="#ffff00">else</font>&nbsp;<font color="#ffff00">if</font>(n&lt;<font color="#ff6060">1</font>)<br>
+<font color="#ffff00">123 </font>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{<br>
+<font color="#ffff00">124 </font>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;outerr(<font color="#ff6060">&quot;error in sendData&quot;</font>);<br>
+<font color="#ffff00">125 </font>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<font color="#ffff00">return</font>&nbsp;-<font color="#ff6060">1</font>;<br>
+<font color="#ffff00">126 </font>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}<br>
+<font color="#ffff00">127 </font>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<font color="#ffff00">return</font>&nbsp;<font color="#ff6060">1</font>;<br>
+<font color="#ffff00">128 </font><br>
+<font color="#ffff00">129 </font>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}<br>
+<font color="#ffff00">130 </font>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<font color="#ffff00">else</font><br>
+<font color="#ffff00">131 </font>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{<br>
+<font color="#ffff00">132 </font>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<font color="#8080ff">//&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;outerr(&quot;no data to send&quot;);</font><br>
+<font color="#ffff00">133 </font>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<font color="#ffff00">return</font>&nbsp;<font color="#ff6060">0</font>;<br>
+<font color="#ffff00">134 </font>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}<br>
+<font color="#ffff00">135 </font><br>
+<font color="#ffff00">136 </font>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<br>
+<font color="#ffff00">137 </font>}<br>
+<font color="#ffff00">138 </font><br>
+<font color="#ffff00">139 </font><font color="#00ff00">int</font>&nbsp;doselect(<font color="#00ff00">int</font>&nbsp;listenSock)<br>
+<font color="#ffff00">140 </font>{<br>
+<font color="#ffff00">141 </font>&nbsp;&nbsp;&nbsp;&nbsp; <font color="#00ff00">int</font>&nbsp;sockfd,n;<br>
+<font color="#ffff00">142 </font>&nbsp;&nbsp;&nbsp;&nbsp; sockfd=listenSock;<br>
+<font color="#ffff00">143 </font>&nbsp;&nbsp;&nbsp;&nbsp; <font color="#00ff00">int</font>&nbsp;maxfd=<font color="#ff6060">0</font>;<br>
+<font color="#ffff00">144 </font>&nbsp;&nbsp;&nbsp;&nbsp; <font color="#00ff00">struct</font>&nbsp;timeval tv;<br>
+<font color="#ffff00">145 </font>&nbsp;&nbsp;&nbsp;&nbsp; <font color="#00ff00">int</font>&nbsp;len;<br>
+<font color="#ffff00">146 </font>&nbsp;&nbsp;&nbsp;&nbsp; <font color="#00ff00">int</font>&nbsp;ret;<br>
+<font color="#ffff00">147 </font>&nbsp;&nbsp;&nbsp;&nbsp; <br>
+<font color="#ffff00">148 </font><br>
+<font color="#ffff00">149 </font>&nbsp;&nbsp;&nbsp;&nbsp; memset(bufsRead,<font color="#ff6060">0</font>,MAX);<br>
+<font color="#ffff00">150 </font>&nbsp;&nbsp;&nbsp;&nbsp; memset(bufsWrite,<font color="#ff6060">0</font>,MAX);<br>
+<font color="#ffff00">151 </font><br>
+<font color="#ffff00">152 </font>&nbsp;&nbsp;&nbsp;&nbsp; <font color="#ffff00">if</font>(sockfd&lt;=<font color="#ff6060">0</font>)<br>
+<font color="#ffff00">153 </font>&nbsp;&nbsp;&nbsp;&nbsp; {<br>
+<font color="#ffff00">154 </font>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; outerr(<font color="#ff6060">&quot;not listening&quot;</font>);<br>
+<font color="#ffff00">155 </font>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; exit(<font color="#ff6060">0</font>);<br>
+<font color="#ffff00">156 </font>&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+<font color="#ffff00">157 </font>&nbsp;&nbsp;&nbsp;&nbsp; <font color="#00ff00">char</font>&nbsp;&nbsp;rec[MAX],send[MAX];<br>
+<font color="#ffff00">158 </font>&nbsp;&nbsp;&nbsp;&nbsp; <font color="#ffff00">while</font>(<font color="#ff6060">true</font>)<br>
+<font color="#ffff00">159 </font>&nbsp;&nbsp;&nbsp;&nbsp; {<br>
+<font color="#ffff00">160 </font>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;printf(<font color="#ff6060">&quot;waiting</font><font color="#ff40ff">\n</font><font color="#ff6060">&quot;</font>);<br>
+<font color="#ffff00">161 </font>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;conns[<font color="#ff6060">0</font>]=accept(sockfd,<font color="#ff6060">NULL</font>,<font color="#ff6060">NULL</font>);<br>
+<font color="#ffff00">162 </font>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<font color="#ffff00">if</font>(conns[<font color="#ff6060">0</font>]&gt;<font color="#ff6060">0</font>)<br>
+<font color="#ffff00">163 </font>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{<br>
+<font color="#ffff00">164 </font>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;curConnNum++;<br>
+<font color="#ffff00">165 </font>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;bufsRead[<font color="#ff6060">0</font>]=(<font color="#00ff00">char</font>&nbsp;*)malloc(<font color="#ffff00">sizeof</font>(<font color="#00ff00">char</font>&nbsp;)*MAX);<br>
+<font color="#ffff00">166 </font>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;bufsWrite[<font color="#ff6060">0</font>]=(<font color="#00ff00">char</font>&nbsp;*)malloc(<font color="#ffff00">sizeof</font>(<font color="#00ff00">char</font>&nbsp;)*MAX);<br>
+<font color="#ffff00">167 </font>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<font color="#8080ff">/*</font><font color="#8080ff">for(int i=0;i&lt;curConnNum;i++)</font><br>
+<font color="#ffff00">168 </font><font color="#8080ff">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{</font><br>
+<font color="#ffff00">169 </font><font color="#8080ff">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if(bufsRead[i]!=NULL)</font><br>
+<font color="#ffff00">170 </font><font color="#8080ff">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{</font><br>
+<font color="#ffff00">171 </font><font color="#8080ff">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;bufsRead[i]=(char *)malloc(sizeof(char )*MAX);</font><br>
+<font color="#ffff00">172 </font><font color="#8080ff">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}</font><br>
+<font color="#ffff00">173 </font><font color="#8080ff">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if(bufsWrite[i]!=NULL)</font><br>
+<font color="#ffff00">174 </font><font color="#8080ff">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{</font><br>
+<font color="#ffff00">175 </font><font color="#8080ff">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;bufsWrite[i]=(char *)malloc(sizeof(char )*MAX);</font><br>
+<font color="#ffff00">176 </font><font color="#8080ff">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}</font><br>
+<font color="#ffff00">177 </font><font color="#8080ff">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}</font><font color="#8080ff">*/</font><br>
+<font color="#ffff00">178 </font>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;printf(<font color="#ff6060">&quot;connected from client </font><font color="#ff40ff">%d</font><font color="#ff40ff">\n</font><font color="#ff6060">&quot;</font>,conns[<font color="#ff6060">0</font>]);<br>
+<font color="#ffff00">179 </font>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}<br>
+<font color="#ffff00">180 </font>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<font color="#ffff00">else</font><br>
+<font color="#ffff00">181 </font>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{<br>
+<font color="#ffff00">182 </font>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;outerr(<font color="#ff6060">&quot;accept return error,continue&quot;</font>);<br>
+<font color="#ffff00">183 </font>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<font color="#ffff00">continue</font>;<br>
+<font color="#ffff00">184 </font>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}<br>
+<font color="#ffff00">185 </font><br>
+<font color="#ffff00">186 </font>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<font color="#ffff00">while</font>(<font color="#ff6060">1</font>)<br>
+<font color="#ffff00">187 </font>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{<br>
+<font color="#ffff00">188 </font>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;FD_ZERO(&amp;rds);<br>
+<font color="#ffff00">189 </font>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;FD_ZERO(&amp;wts);<br>
+<font color="#ffff00">190 </font><br>
+<font color="#ffff00">191 </font>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;FD_SET(<font color="#ff6060">0</font>,&amp;rds);<br>
+<font color="#ffff00">192 </font>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;FD_SET(<font color="#ff6060">1</font>,&amp;wts);<br>
+<font color="#ffff00">193 </font>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;maxfd=<font color="#ff6060">1</font>;<br>
+<font color="#ffff00">194 </font><br>
+<font color="#ffff00">195 </font>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;FD_SET(sockfd,&amp;rds);<br>
+<font color="#ffff00">196 </font>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<font color="#ffff00">if</font>(sockfd&gt;maxfd)<br>
+<font color="#ffff00">197 </font>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;maxfd=sockfd;<br>
+<font color="#ffff00">198 </font><br>
+<font color="#ffff00">199 </font><br>
+<font color="#ffff00">200 </font>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;tv.tv_sec=<font color="#ff6060">1</font>;<br>
+<font color="#ffff00">201 </font>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;tv.tv_usec=<font color="#ff6060">10</font>;<br>
+<font color="#ffff00">202 </font><br>
+<font color="#ffff00">203 </font><br>
+<font color="#ffff00">204 </font>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<font color="#ffff00">for</font>(<font color="#00ff00">int</font>&nbsp;i=<font color="#ff6060">0</font>;i&lt;curConnNum;i++)<br>
+<font color="#ffff00">205 </font>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {<br>
+<font color="#ffff00">206 </font>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; FD_SET(conns[i],&amp;rds);<br>
+<font color="#ffff00">207 </font>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; FD_SET(conns[i],&amp;wts);<br>
+<font color="#ffff00">208 </font>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <font color="#ffff00">if</font>(conns[i]&gt;maxfd)<br>
+<font color="#ffff00">209 </font>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; maxfd=conns[i];<br>
+<font color="#ffff00">210 </font>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+<font color="#ffff00">211 </font><br>
+<font color="#ffff00">212 </font><br>
+<font color="#ffff00">213 </font><br>
+<font color="#ffff00">214 </font>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ret=select(maxfd+<font color="#ff6060">1</font>,&amp;rds,&amp;wts,<font color="#ff6060">NULL</font>,&amp;tv);<br>
+<font color="#ffff00">215 </font><br>
+<font color="#ffff00">216 </font>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<font color="#8080ff">//printf(&quot;ret=%d\n&quot;,ret);</font><br>
+<font color="#ffff00">217 </font><font color="#8080ff">/*</font><font color="#8080ff">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if(ret==-1)</font><br>
+<font color="#ffff00">218 </font><font color="#8080ff">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{</font><br>
+<font color="#ffff00">219 </font><font color="#8080ff">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;outerr(&quot;select return error&quot;);</font><br>
+<font color="#ffff00">220 </font><font color="#8080ff">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;break;</font><br>
+<font color="#ffff00">221 </font><font color="#8080ff">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}</font><br>
+<font color="#ffff00">222 </font><font color="#8080ff">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;else if (ret==0)</font><br>
+<font color="#ffff00">223 </font><font color="#8080ff">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{</font><br>
+<font color="#ffff00">224 </font><font color="#8080ff">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;//&nbsp;&nbsp;outerr(&quot;select return 0, no data ready,continue&quot;);</font><br>
+<font color="#ffff00">225 </font><font color="#8080ff">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;continue;</font><br>
+<font color="#ffff00">226 </font><font color="#8080ff">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}</font><br>
+<font color="#ffff00">227 </font><font color="#8080ff">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#8080ff">*/</font><br>
+<font color="#ffff00">228 </font>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<font color="#ffff00">if</font>(ret&gt;<font color="#ff6060">0</font>)<br>
+<font color="#ffff00">229 </font>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{<br>
+<font color="#ffff00">230 </font><br>
+<font color="#ffff00">231 </font>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<font color="#ffff00">for</font>(<font color="#00ff00">int</font>&nbsp;i=<font color="#ff6060">0</font>;i&lt;curConnNum;i++)<br>
+<font color="#ffff00">232 </font>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{<br>
+<font color="#ffff00">233 </font>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<font color="#ffff00">if</font>(FD_ISSET(conns[i],&amp;rds))<br>
+<font color="#ffff00">234 </font>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{<br>
+<font color="#ffff00">235 </font>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;receiveData(i);<br>
+<font color="#ffff00">236 </font>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}<br>
+<font color="#ffff00">237 </font>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<font color="#ffff00">if</font>(FD_ISSET(conns[i],&amp;wts))<br>
+<font color="#ffff00">238 </font>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{<br>
+<font color="#ffff00">239 </font>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<font color="#ffff00">if</font>(strlen(bufsWrite[i])&gt;<font color="#ff6060">0</font>)<br>
+<font color="#ffff00">240 </font>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;sendData(i);<br>
+<font color="#ffff00">241 </font>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}<br>
+<font color="#ffff00">242 </font>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}<br>
+<font color="#ffff00">243 </font><br>
+<font color="#ffff00">244 </font>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<font color="#ffff00">if</font>(FD_ISSET(sockfd,&amp;rds))<br>
+<font color="#ffff00">245 </font>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{<br>
+<font color="#ffff00">246 </font><br>
+<font color="#ffff00">247 </font>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;conns[curConnNum]=accept(sockfd,<font color="#ff6060">NULL</font>,<font color="#ff6060">NULL</font>);<br>
+<font color="#ffff00">248 </font>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <font color="#8080ff">// memset(bufsRead[curConnNum],0,MAX);</font><br>
+<font color="#ffff00">249 </font>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<font color="#8080ff">//memset(bufsWrite[curConnNum],0,MAX);</font><br>
+<font color="#ffff00">250 </font>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<font color="#ffff00">if</font>(conns[curConnNum]&gt;<font color="#ff6060">0</font>)<br>
+<font color="#ffff00">251 </font>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{<br>
+<font color="#ffff00">252 </font>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<font color="#8080ff">//if(bufsRead[curConnNum]!=NULL)</font><br>
+<font color="#ffff00">253 </font>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{<br>
+<font color="#ffff00">254 </font>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;bufsRead[curConnNum]=(<font color="#00ff00">char</font>&nbsp;*)malloc(<font color="#ffff00">sizeof</font>(<font color="#00ff00">char</font>&nbsp;)*MAX);<br>
+<font color="#ffff00">255 </font>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}<br>
+<font color="#ffff00">256 </font>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<font color="#8080ff">//if(bufsWrite[curConnNum]!=NULL)</font><br>
+<font color="#ffff00">257 </font>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{<br>
+<font color="#ffff00">258 </font>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;bufsWrite[curConnNum]=(<font color="#00ff00">char</font>&nbsp;*)malloc(<font color="#ffff00">sizeof</font>(<font color="#00ff00">char</font>&nbsp;)*MAX);<br>
+<font color="#ffff00">259 </font>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}<br>
+<font color="#ffff00">260 </font>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;curConnNum++;<br>
+<font color="#ffff00">261 </font>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;printf(<font color="#ff6060">&quot;a new client connected</font><font color="#ff40ff">\n</font><font color="#ff6060">&quot;</font>);<br>
+<font color="#ffff00">262 </font>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}<br>
+<font color="#ffff00">263 </font>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}<br>
+<font color="#ffff00">264 </font>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}<br>
+<font color="#ffff00">265 </font>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<br>
+<font color="#ffff00">266 </font><br>
+<font color="#ffff00">267 </font>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}<br>
+<font color="#ffff00">268 </font>&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+<font color="#ffff00">269 </font>&nbsp;&nbsp;&nbsp;&nbsp; close(sockfd);<br>
+<font color="#ffff00">270 </font>}<br>
+<font color="#ffff00">271 </font><br>
+</font></body>
+</html>

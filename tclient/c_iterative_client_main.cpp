@@ -1,6 +1,7 @@
 #include"c_iterative_client.h"
 
-#define FORKNUM 3
+#define FORKNUM 4
+#define REQUESTNUM 20
 
 int main(int argc,char **argv)
 {
@@ -39,18 +40,12 @@ int main(int argc,char **argv)
 		     int count=0;
 
 		     clientsocks[i]=buildConnection( addr,port );
-		     while(1)
+		     while(count<REQUESTNUM)
 		     {
 			  count++;
 			  printf("***********************************%d*******\n",count);
-			  printf("***********************************%d*******\n",count);
-			  printf("***********************************%d*******\n",count);
-			  printf("***********************************%d*******\n",count);
-			  //printf("waiting for input or network\n");
 			  clientReadWrite(clientsocks[i]);
 		     }
-		     for(int i=0;i<10;i++)
-			     printf("************************************************************\n");
 		     exit(0);
 
 	     }
@@ -59,12 +54,13 @@ int main(int argc,char **argv)
      }
 
 //     sleep(15);
-//     for(int i=0;i<FORKNUM;i++)
-//	     wait(NULL);
+     for(int i=0;i<FORKNUM;i++)
+	     wait(NULL);
 
     
-     printf("************************************************************\n");
+//     printf("*********&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&7***************************************************\n");
 
+     return 0;
 }
 
 

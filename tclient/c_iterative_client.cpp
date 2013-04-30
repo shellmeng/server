@@ -33,6 +33,7 @@ int buildConnection(char * addr,int port)
           outerr("connection error\n");
           return -1;//error
      }
+     srand((unsigned)time(NULL));
 
      return sockfd;
 }
@@ -46,37 +47,25 @@ int clientReadWrite(int skn)
 
 
 
-     srand(time(NULL));
 
-     int num=rand()%(MAX-1);
+     int num=rand()%(MAX/20-1)+3;
 
+//     printf("the num is %d**********************************\n",num);
      for(int i=0;i<num;i++)
 	     buf[i]='a'+ rand()%26;
      buf[num]=0;
      puts(buf);
      printf("\n");
-    // fgets(buf,MAX,stdin);
      write(skn,buf,strlen(buf));
-     //	printf("write success first time\n");
-     while((n=read(skn,rec,MAX))>0)
+     n=read(skn,rec,MAX);
+     if(n>0)
      {
           rec[n]=0;
           if(fputs(rec,stdout)==EOF)
                printf("puts error\n");
 	  printf("\n");
-	//printf("exit while in clientRW\n");
-	  srand(time(NULL));
-          num=rand()%(MAX-1);
- 
-          for(int i=0;i<num;i++)
-	       buf[i]='a'+ rand()%26;
-          buf[num]=0;
-          puts(buf);
-          printf("\n");
-     //	fgets(buf,MAX,stdin);
-     	write(skn,buf,strlen(buf));
      }
-     if(n<0)
+     if(n<=0)
           outerr("read return 0\n");
      return 0;
 }

@@ -26,30 +26,39 @@ int main(int argc,char **argv)
 	     if( (pid[i]=fork())<0)
 	     {
 		     printf("fork error\n");
+	 	     //printf("\n\n\n");
 		     exit(0);
 
 			  
 	     }
 	     else if (pid[i]==0)
 	     {
-		     signal(SIGINT,appExit);
-		     printf("in process %d\n\n",getpid());
+		     //printf("in process %d\n",getpid());
+	             ///printf("\n\n\n");
 		     int count=0;
 
-		     while(1)
+		     while(count<115)
 		     {
-			  printf("in process %d\n\n",getpid());
+			     signal(SIGINT,appExit);
+			  printf("in process %d\n",getpid());
+			  //printf("\n\n\n");
 			  count++;
-			  printf("*************************%d*******\n\n",count);
+			  printf("*************************%d*******\n",count);
+		//	  printf("\n");
 		     }
 		     exit(0);
 
+	     }
+	     else
+	     {
+		     printf("parent\n");
 	     }
 
      
      }
 
     
+	     sleep(1);
      printf("&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&******\n");
 
 }

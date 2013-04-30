@@ -92,7 +92,7 @@ int receiveData(int clientNum)
   else
   {
 
-	  outerr("the receive didnot received data");
+	 // outerr("the receive didnot received data");
 	  return -1;
   }
 }
