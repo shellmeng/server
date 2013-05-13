@@ -10,6 +10,8 @@ int buildConnection(int port)
           outerr("new socket error in server\n");
           exit(-1);
      }
+     int flag=1;
+     setsockopt(sockfd,SOL_SOCKET ,SO_REUSEADDR,&flag,sizeof(flag));
 
      bzero(&server,sizeof(server));
 
@@ -18,7 +20,6 @@ int buildConnection(int port)
      server.sin_addr.s_addr=htonl(INADDR_ANY);
     
      bind(sockfd,(struct sockaddr*)&server,sizeof(server));
-     setsockopt(sockfd,SOL_SOCKET ,SO_REUSEADDR,(const char*)&server,sizeof(bool));
      listen(sockfd,LISTENQUE);
 
      return sockfd;
@@ -76,6 +77,8 @@ void* receiveData(void *tapara)
 	  exit(0);
   }
   memset(ta->buf,0,strlen(ta->buf));
+  while(1)
+  {
   printf("here read\n");
   n=read(ta->conn,ta->buf,MAX-1);
   if(n>0)
@@ -88,14 +91,17 @@ void* receiveData(void *tapara)
 		  outerr("error in hanleData");
 		  exit(0);
 	  }
-	  return 0;
+	  //close(ta->conn);
+	 // return 0;
   }
   else
   {
 
 	 // outerr("the receive didnot received data");
-	  return 0;
+	  //return 0;
   }
+  }
+  return 0;
 }
 
 int sendData(int conn, char * bufsRead)
@@ -152,24 +158,36 @@ int threadHandle(int sockfd)
 	int conn=0;
 	char bufsRead[MAX];
 	memset(bufsRead,0,MAX);
-	conn=accept(sockfd,NULL,NULL);
-	if(conn<=0)
+	int conns[MAX];
+	int count=0;
+	while(1)
 	{
-		outerr("error from accept\n");
-		exit(0);
+		printf("here again");
+		conn=accept(sockfd,NULL,NULL);
+		//conn=conns[count];
+		if(conn<=0)
+		{
+			outerr("error from accept\n");
+			exit(0);
+		}
+
+		printf("conn=%d\n",conn);
+		ta.conn=conn;
+		ta.buf=bufsRead;
+
+		ret=pthread_create(&dealClient,NULL,receiveData,(void *) &ta);
+		printf("in thread %d\n",dealClient);
+		if(ret!=0)
+		{
+			outerr("create thread failed");
+			exit(0);
+		}
+
+//		sleep(20);
+		//pthread_join(dealClient,&status);
+		
+		printf("in thread %d\n",dealClient);
+//		close(conn);
 	}
-
-	ta.conn=conn;
-	ta.buf=bufsRead;
-
-	ret=pthread_create(&dealClient,NULL,receiveData,(void *) &ta);
-	printf("in thread %d\n",dealClient);
-	if(ret!=0)
-	{
-		outerr("create thread failed");
-		exit(0);
-	}
-
-	pthread_join(dealClient,&status);
 	return 0;
 }
