@@ -3,6 +3,8 @@
 int main()
 {
 
+     Iterative_Server iterSer=new Iterative_Server();
+
      printf("start server\n");
      int sockfd,connfd,n;
      pid_t pid;
