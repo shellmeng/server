@@ -1,6 +1,30 @@
 
 #include"c_iterative_server.h"
 
+Server::Server()
+{
+	printf("construct the virtual Server\n");
+}
+
+Server::Server(char * serveraddr, int pt)
+{
+	printf("construct the virtual Server\n");
+	if(serveraddr!=NULL)
+		serverAddr=serveraddr;
+	port=pt;
+}
+
+Iterative_Server::init()
+{}
+
+Iterative_Server::handleConnection()
+{}
+
+Iterative_Server::handleData()
+{}
+
+Iterative_Server::run()
+{}
 
 int buildConnection(int port)
 {

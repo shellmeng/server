@@ -7,6 +7,24 @@
 #define LISTENQUE 10
 #define PORT 12346
 
+class Server
+{
+	public:
+		Server();
+		Server(char * serveraddr, int port );
+		virtual void run()=0;
+		virtual void init()=0;
+		virtual handleConnection()=0;
+		virtual handleData()=0;
+	private:
+		char * serverAddr;
+		int port;
+};
+class Iterative_Server:public Server
+{
+	public:
+
+};
 
 int buildConnection(int port);
 
