@@ -1,6 +1,29 @@
 
 #include"c_iterative_server.h"
 
+Server::Server()
+{
+	fprintf(stdout,"construct a server base\n");
+}
+
+Server::Server(char * seraddr, int pt)
+{
+	fprintf(stdout,"construct a server base\n");
+	this->serverAddr=seraddr;
+	this->port=pt;
+}
+
+Iterative_Server::init()
+{}
+
+Iterative_Server::handleConnection()
+{}
+
+Iterative_Server::handleData()
+{}
+
+Iterative_Server::run()
+{}
 
 int buildConnection(int port)
 {

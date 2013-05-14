@@ -7,6 +7,63 @@
 #define LISTENQUE 10
 #define PORT 12346
 
+class NetAddress
+{
+	private:
+		struct sockaddr_in serverAddr;
+	public:
+		NetAddress();
+		NetAddress(const char * host,int port);
+		int stringToAddr();
+		int addrToString();
+		int getPort();
+		char * getHost();
+		int set(const char * host, int port);
+};
+
+class Socket
+{
+	private:
+		int sockfd;
+	public:
+		int open();
+		int close();
+		char * getRemoteAddr();
+		char * getLocalAddr();
+		int setOption();
+		char * getOption();
+};
+
+class SocketStream:public Socket
+{
+	private:
+	public:
+		recv();
+		send();
+		recvn();
+		sendn();
+		recvvn();
+		sendvn();
+}
+
+class SocketConnect:public Socket
+{
+	private:
+		NetAddress na;
+	public:
+		int connect();
+};
+
+class SocketAcceptor:public Socket
+{
+	private:
+		NetAddress netaddr;
+		SocketStream sockstream;
+	public:
+		open(NetAddress * na);
+		accept(SocketStream & ss);
+
+};
 class Server
 {
 	public:
@@ -17,8 +74,7 @@ class Server
 		virtual handleConnection()=0;
 		virtual handleData()=0;
 	private:
-		char * serverAddr;
-		int port;
+		NetAddress  netaddr;
 };
 class Iterative_Server:public Server
 {
