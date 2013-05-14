@@ -3,9 +3,11 @@
 int main()
 {
 
+     printf("start server\n");
      Iterative_Server iterSer=new Iterative_Server();
 
-     printf("start server\n");
+     iterSer.run();
+
      int sockfd,connfd,n;
      pid_t pid;
      sockfd=buildConnection(PORT);
