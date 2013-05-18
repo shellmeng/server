@@ -7,33 +7,42 @@
 #define LISTENQUE 10
 #define PORT 12346
 
+/*****************************************************************************/
+/*****************************************************************************/
 class NetAddress
 {
 	private:
 		struct sockaddr_in serverAddr;
+		int port;
+		char * host;
 	public:
+		struct sockaddr *SAserverAddr;
 		NetAddress();
 		NetAddress(const char * host,int port);
 		int stringToAddr();
 		int addrToString();
 		int getPort();
 		char * getHost();
-		int set(const char * host, int port);
+	//	int set(const char * host, int port);
 };
-
+/*****************************************************************************/
+/*****************************************************************************/
 class Socket
 {
 	private:
 		int sockfd;
 	public:
-		int open();
+		Socket();
+		//int open();
 		int close();
-		char * getRemoteAddr();
-		char * getLocalAddr();
+		//char * getRemoteAddr();
+		//char * getLocalAddr();
 		int setOption();
 		char * getOption();
 };
 
+/*****************************************************************************/
+/*****************************************************************************/
 class SocketStream:public Socket
 {
 	private:
@@ -44,8 +53,10 @@ class SocketStream:public Socket
 		sendn();
 		recvvn();
 		sendvn();
-}
+};
 
+/*****************************************************************************/
+/*****************************************************************************/
 class SocketConnect:public Socket
 {
 	private:
@@ -54,34 +65,49 @@ class SocketConnect:public Socket
 		int connect();
 };
 
-class SocketAcceptor:public Socket
+/*****************************************************************************/
+/*****************************************************************************/
+/*class SocketAcceptor:public Socket
 {
 	private:
-		NetAddress netaddr;
+		//NetAddress netaddr;
 		SocketStream sockstream;
 	public:
 		open(NetAddress * na);
 		accept(SocketStream & ss);
 
-};
+};*/
+
+/*****************************************************************************/
+/*****************************************************************************/
 class Server
 {
 	public:
-		Server();
+		Server();  //default port
 		Server(char * serveraddr, int port );
 		virtual void run()=0;
-		virtual void init()=0;
+		virtual int  init();
 		virtual handleConnection()=0;
 		virtual handleData()=0;
+		virtual waitfor_multievent()=0;
+
 	private:
-		NetAddress  netaddr;
+		int port;
+		char * host;
+		int acceptor();
+		//NetAddress  netaddr;
+		//Socket sock;
 };
+/*****************************************************************************/
+/*****************************************************************************/
 class Iterative_Server:public Server
 {
 	public:
 
 };
 
+/*****************************************************************************/
+/*****************************************************************************/
 int buildConnection(int port);
 
 int echo(int conn);

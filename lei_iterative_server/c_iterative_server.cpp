@@ -1,29 +1,134 @@
 
 #include"c_iterative_server.h"
 
+/********************************************************************************************/
+/********************************************************************************************/
+NetAddress::NetAddress()
+{
+	p=-1;
+	SAserverAddr=0;
+	host=0;
+}
+
+NetAddress::NetAddress(const char * h, int p)
+{
+
+     port =p;
+     host=h;
+     bzero(&serverAddr,sizeof(serverAddr));
+
+     serverAddr.sin_family=AF_INET;
+     serverAddr.sin_port=htons(p);
+     serverAddr.sin_addr.s_addr=htonl(INADDR_ANY);
+    
+     SAserverAddr=(struct sockaddr*)&serverAddr,sizeof(serverAddr);
+}
+
+int NetAddress::stringToAddr()
+{}
+int NetAddress::addrToString()
+{}
+int NetAddress::getPort()
+{
+	if(port>0)
+		return port;
+	else
+	{
+		fprintf(stdout,"the port is illegal,exit\n");
+		exit(0);
+	}
+}
+/********************************************************************************************/
+/********************************************************************************************/
+
+
+/********************************************************************************************/
+/********************************************************************************************/
+
+Socket::Socket()
+{
+     if ((sockfd=socket(AF_INET,SOCK_STREAM,0))<0)
+     {
+          outerr("new socket error in server\n");
+          exit(-1);
+     }
+
+}
+
+Socket::close()
+{
+	if(sockfd!=0)
+		close(sockfd);
+}
+
+Socket::setOption()
+{}
+
+Socket::getOption()
+{}
+/********************************************************************************************/
+/********************************************************************************************/
 Server::Server()
 {
 	fprintf(stdout,"construct a server base\n");
+	port=12346;
+	host=0;
+
 }
 
 Server::Server(char * seraddr, int pt)
 {
 	fprintf(stdout,"construct a server base\n");
-	this->serverAddr=seraddr;
-	this->port=pt;
+	port=pt;
+	host=seraddr;
 }
 
 Iterative_Server::init()
-{}
+{
+	NetAddress *na=new NetAddress(host,port);
+	Socket * sock=new Socket();
+        bind(sock->sockfd,na->SAserverAddr,sizeof(sa->serverAddr));
+	listen(sock->sockfd,LISTENQUE);
+	return 1;
+}
 
 Iterative_Server::handleConnection()
-{}
+{
+
+	return 0;
+}
 
 Iterative_Server::handleData()
-{}
+{
+	return 0;
+}
 
 Iterative_Server::run()
-{}
+{
+	int ret;
+	if( init()<=0)
+	{
+		outerr("server init error, exit");
+		exit(0);
+	}
+
+	fprintf(stdout, "the server run:\n");
+
+	SocketAcceptor.accept();
+	for(;;)
+	{
+		if(waitfor_multievent()==-1)
+			return -1;
+		if(handleConnection()==-1)
+			return -1;
+		if(handleData()==-1)
+			return -1;
+	}
+
+
+
+
+}
 
 int buildConnection(int port)
 {
