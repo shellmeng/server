@@ -68,6 +68,9 @@ Socket::getOption()
 {}
 /********************************************************************************************/
 /********************************************************************************************/
+
+
+
 Server::Server()
 {
 	fprintf(stdout,"construct a server base\n");
@@ -83,14 +86,23 @@ Server::Server(char * seraddr, int pt)
 	host=seraddr;
 }
 
+Server::acceptor()
+{
+
+}
+
+/********************************************************************************************/
+/********************************************************************************************/
 Iterative_Server::init()
 {
 	NetAddress *na=new NetAddress(host,port);
 	Socket * sock=new Socket();
         bind(sock->sockfd,na->SAserverAddr,sizeof(sa->serverAddr));
 	listen(sock->sockfd,LISTENQUE);
-	return 1;
+	return sock->sockfd;
 }
+
+
 
 Iterative_Server::handleConnection()
 {
@@ -105,8 +117,8 @@ Iterative_Server::handleData()
 
 Iterative_Server::run()
 {
-	int ret;
-	if( init()<=0)
+	int retsock;
+	if( (retsock=init())<=0)
 	{
 		outerr("server init error, exit");
 		exit(0);
@@ -114,9 +126,12 @@ Iterative_Server::run()
 
 	fprintf(stdout, "the server run:\n");
 
-	SocketAcceptor.accept();
+	
+	SocketStream *ss;
 	for(;;)
 	{
+
+		ss=acceptor(retsock);
 		if(waitfor_multievent()==-1)
 			return -1;
 		if(handleConnection()==-1)
