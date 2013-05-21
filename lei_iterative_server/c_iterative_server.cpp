@@ -5,12 +5,12 @@
 /********************************************************************************************/
 NetAddress::NetAddress()
 {
-	p=-1;
+	port=-1;
 	SAserverAddr=0;
 	host=0;
 }
 
-NetAddress::NetAddress(const char * h, int p)
+NetAddress::NetAddress(char * h, int p)
 {
 
      port =p;
@@ -55,16 +55,16 @@ Socket::Socket()
 
 }
 
-Socket::close()
+int Socket::sclose()
 {
 	if(sockfd!=0)
 		close(sockfd);
 }
 
-Socket::setOption()
+int Socket::setOption()
 {}
 
-Socket::getOption()
+char * Socket::getOption()
 {}
 /********************************************************************************************/
 /********************************************************************************************/
@@ -86,36 +86,62 @@ Server::Server(char * seraddr, int pt)
 	host=seraddr;
 }
 
-Server::acceptor()
+int Server::acceptor(SocketStream & ss)
 {
 
+	//accept();
 }
 
 /********************************************************************************************/
 /********************************************************************************************/
-Iterative_Server::init()
+
+SocketStream::SocketStream():Socket()
+{
+
+	readbuf=0;
+	sendbuf=0;
+	readbuf =(char *) malloc( sizeof(char) * MAX);
+	sendbuf =(char *) malloc( sizeof(char) * MAX);
+	if(readbuf==0 || sendbuf==0)
+	{
+
+		outerr("malloc for buf error");
+		exit(0);
+	}
+}
+int SocketStream::recv()
+{
+
+}
+int SocketStream::send()
+{}
+/********************************************************************************************/
+/********************************************************************************************/
+int Iterative_Server::init()
 {
 	NetAddress *na=new NetAddress(host,port);
 	Socket * sock=new Socket();
-        bind(sock->sockfd,na->SAserverAddr,sizeof(sa->serverAddr));
+        bind(sock->sockfd,na->SAserverAddr,sizeof(na->serverAddr));
 	listen(sock->sockfd,LISTENQUE);
 	return sock->sockfd;
 }
 
 
 
-Iterative_Server::handleConnection()
+int Iterative_Server::handleConnection()
 {
 
 	return 0;
 }
 
-Iterative_Server::handleData()
+int Iterative_Server::handleData()
 {
 	return 0;
 }
 
-Iterative_Server::run()
+int Iterative_Server::waitfor_multievent()
+{}
+int Iterative_Server::run()
 {
 	int retsock;
 	if( (retsock=init())<=0)
@@ -127,11 +153,11 @@ Iterative_Server::run()
 	fprintf(stdout, "the server run:\n");
 
 	
-	SocketStream *ss;
+	SocketStream ss;
 	for(;;)
 	{
 
-		ss=acceptor(retsock);
+		acceptor(ss);
 		if(waitfor_multievent()==-1)
 			return -1;
 		if(handleConnection()==-1)

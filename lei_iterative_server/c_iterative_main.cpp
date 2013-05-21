@@ -4,9 +4,9 @@ int main()
 {
 
      printf("start server\n");
-     Iterative_Server iterSer=new Iterative_Server();
+     Server *iterSer=new Iterative_Server();
 
-     iterSer.run();
+     iterSer->run();
 
      int sockfd,connfd,n;
      pid_t pid;

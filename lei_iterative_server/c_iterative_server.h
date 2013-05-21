@@ -11,14 +11,15 @@
 /*****************************************************************************/
 class NetAddress
 {
-	private:
+	//private:
+	public:
 		struct sockaddr_in serverAddr;
 		int port;
 		char * host;
 	public:
 		struct sockaddr *SAserverAddr;
 		NetAddress();
-		NetAddress(const char * host,int port);
+		NetAddress(char * host,int port);
 		int stringToAddr();
 		int addrToString();
 		int getPort();
@@ -29,12 +30,13 @@ class NetAddress
 /*****************************************************************************/
 class Socket
 {
-	private:
+	//protected:
+	public:
 		int sockfd;
 	public:
 		Socket();
 		//int open();
-		int close();
+		int sclose();
 		//char * getRemoteAddr();
 		//char * getLocalAddr();
 		int setOption();
@@ -46,24 +48,27 @@ class Socket
 class SocketStream:public Socket
 {
 	private:
+		char * readbuf;
+		char * sendbuf;
 	public:
-		recv();
-		send();
-		recvn();
-		sendn();
-		recvvn();
-		sendvn();
+		SocketStream();
+		int recv();
+		int send();
+		int recvn();
+		int sendn();
+		int recvvn();
+		int sendvn();
 };
 
 /*****************************************************************************/
 /*****************************************************************************/
-class SocketConnect:public Socket
+/*class SocketConnect:public Socket
 {
 	private:
 		NetAddress na;
 	public:
 		int connect();
-};
+};*/
 
 /*****************************************************************************/
 /*****************************************************************************/
@@ -71,7 +76,7 @@ class SocketConnect:public Socket
 {
 	private:
 		//NetAddress netaddr;
-		SocketStream sockstream;
+
 	public:
 		open(NetAddress * na);
 		accept(SocketStream & ss);
@@ -85,16 +90,17 @@ class Server
 	public:
 		Server();  //default port
 		Server(char * serveraddr, int port );
-		virtual void run()=0;
-		virtual int  init();
-		virtual handleConnection()=0;
-		virtual handleData()=0;
-		virtual waitfor_multievent()=0;
+		virtual int  run()=0;
+		virtual int  init()=0;
+		virtual int handleConnection()=0;
+		virtual int handleData()=0;
+		virtual int waitfor_multievent()=0;
 
-	private:
+	//protected:
+	public:
 		int port;
 		char * host;
-		int acceptor();
+		int acceptor(SocketStream &ss);
 		//NetAddress  netaddr;
 		//Socket sock;
 };
@@ -102,8 +108,14 @@ class Server
 /*****************************************************************************/
 class Iterative_Server:public Server
 {
+
 	public:
 
+	 int  run();
+	 int  init();
+	 int handleConnection();
+	 int handleData();
+	 int waitfor_multievent();
 };
 
 /*****************************************************************************/
