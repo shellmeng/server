@@ -7,7 +7,11 @@ int main()
      Server *iterSer=new Iterative_Server();
 
      iterSer->run();
+     return 0;
 
+
+
+     // nothing works
      int sockfd,connfd,n;
      pid_t pid;
      sockfd=buildConnection(PORT);

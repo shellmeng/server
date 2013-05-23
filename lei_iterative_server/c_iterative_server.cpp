@@ -86,9 +86,12 @@ Server::Server(char * seraddr, int pt)
 	host=seraddr;
 }
 
-int Server::acceptor(SocketStream & ss)
+int Server::acceptor(int sock, SocketStream & ss)
 {
 
+	int conn =accept(sock, NULL, NULL);
+	ss.sockfd=conn;
+	
 	//accept();
 }
 
@@ -112,9 +115,26 @@ SocketStream::SocketStream():Socket()
 int SocketStream::recv()
 {
 
+	int n;
+	n=read(sockfd,readbuf,MAX);
+	if(n>0)
+	{
+		readbuf[n]=0;
+		printf("read success\n");
+		return 1;
+	}
+	else
+		return 0;
+		
 }
 int SocketStream::send()
-{}
+{
+
+	if(sendbuf!=0)
+		write(sockfd, sendbuf, strlen(sendbuf));
+
+	printf("write success\n");
+}
 /********************************************************************************************/
 /********************************************************************************************/
 int Iterative_Server::init()
@@ -134,8 +154,18 @@ int Iterative_Server::handleConnection()
 	return 0;
 }
 
-int Iterative_Server::handleData()
+int Iterative_Server::handleData( SocketStream & ss)
 {
+
+	ss.recv();
+	if(strlen(ss.readbuf)>0)
+	{
+		memcpy(ss.sendbuf, ss.readbuf,strlen(ss.readbuf));
+		ss.readbuf[0]=0;
+	}
+
+	ss.send();
+	ss.sclose();
 	return 0;
 }
 
@@ -157,12 +187,12 @@ int Iterative_Server::run()
 	for(;;)
 	{
 
-		acceptor(ss);
+		acceptor(retsock,ss);
 		if(waitfor_multievent()==-1)
 			return -1;
 		if(handleConnection()==-1)
 			return -1;
-		if(handleData()==-1)
+		if(handleData(ss)==-1)
 			return -1;
 	}
 

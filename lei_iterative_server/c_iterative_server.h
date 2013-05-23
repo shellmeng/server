@@ -47,7 +47,8 @@ class Socket
 /*****************************************************************************/
 class SocketStream:public Socket
 {
-	private:
+//	private:
+	public:
 		char * readbuf;
 		char * sendbuf;
 	public:
@@ -93,14 +94,14 @@ class Server
 		virtual int  run()=0;
 		virtual int  init()=0;
 		virtual int handleConnection()=0;
-		virtual int handleData()=0;
+		virtual int handleData(SocketStream & )=0;
 		virtual int waitfor_multievent()=0;
 
 	//protected:
 	public:
 		int port;
 		char * host;
-		int acceptor(SocketStream &ss);
+		int acceptor(int ,SocketStream &ss);
 		//NetAddress  netaddr;
 		//Socket sock;
 };
@@ -114,7 +115,7 @@ class Iterative_Server:public Server
 	 int  run();
 	 int  init();
 	 int handleConnection();
-	 int handleData();
+	 int handleData(SocketStream&);
 	 int waitfor_multievent();
 };
 
