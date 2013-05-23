@@ -1,5 +1,6 @@
 
 #include"c_asyn_server.h"
+
 fd_set rds,wts,exps;
 int conns[MAX];
 char ** bufsRead=(char **)malloc(sizeof(char *) *MAX);
@@ -92,14 +93,14 @@ int receiveData(int clientNum)
   else
   {
 
-	 // outerr("the receive didnot received data");
+	  //outerr("the receive didnot received data");
 	  return -1;
   }
 }
 
 int sendData(int clientNum)
 {
-	printf("in sendData\n");
+//	printf("in sendData\n");
 	char * start=bufsWrite[clientNum];
 	int n=0;
 	if(strlen(start)>0)
@@ -164,17 +165,6 @@ int doselect(int listenSock)
 		  curConnNum++;
 		  bufsRead[0]=(char *)malloc(sizeof(char )*MAX);
 		  bufsWrite[0]=(char *)malloc(sizeof(char )*MAX);
-		  /*for(int i=0;i<curConnNum;i++)
-		  {
-			  if(bufsRead[i]!=NULL)
-			  {
-				  bufsRead[i]=(char *)malloc(sizeof(char )*MAX);
-			  }
-			  if(bufsWrite[i]!=NULL)
-			  {
-				  bufsWrite[i]=(char *)malloc(sizeof(char )*MAX);
-			  }
-		  }*/
 		  printf("connected from client %d\n",conns[0]);
 	  }
 	  else
@@ -185,84 +175,83 @@ int doselect(int listenSock)
 
 	  while(1)
 	  {
-          FD_ZERO(&rds);
-          FD_ZERO(&wts);
+		  FD_ZERO(&rds);
+		  FD_ZERO(&wts);
 
-	  FD_SET(0,&rds);
-	  FD_SET(1,&wts);
-	  maxfd=1;
+		  FD_SET(0,&rds);
+		  FD_SET(1,&wts);
+		  maxfd=1;
 
-	  FD_SET(sockfd,&rds);
-	  if(sockfd>maxfd)
-		  maxfd=sockfd;
-
-
-	  tv.tv_sec=1;
-	  tv.tv_usec=10;
+		  FD_SET(sockfd,&rds);
+		  if(sockfd>maxfd)
+			  maxfd=sockfd;
 
 
-	  for(int i=0;i<curConnNum;i++)
-		 {
-			 FD_SET(conns[i],&rds);
-			 FD_SET(conns[i],&wts);
-			 if(conns[i]>maxfd)
-				 maxfd=conns[i];
-		 }
+		  tv.tv_sec=1;
+		  tv.tv_usec=10;
 
-
-
-	  ret=select(maxfd+1,&rds,&wts,NULL,&tv);
-
-	  //printf("ret=%d\n",ret);
-/*	  if(ret==-1)
-	  {
-		  outerr("select return error");
-		  break;
-	  }
-	  else if (ret==0)
-	  {
-		//  outerr("select return 0, no data ready,continue");
-		  continue;
-	  }
-	  */
-	  if(ret>0)
-	  {
 
 		  for(int i=0;i<curConnNum;i++)
+			 {
+				 FD_SET(conns[i],&rds);
+				 FD_SET(conns[i],&wts);
+				 if(conns[i]>maxfd)
+					 maxfd=conns[i];
+			 }
+
+
+
+		  ret=select(maxfd+1,&rds,&wts,NULL,&tv);
+
+	/*	  if(ret==-1)
 		  {
-			  if(FD_ISSET(conns[i],&rds))
+			  outerr("select return error");
+			  break;
+		  }
+		  */
+		  if (ret==0)
+		  {
+			//  outerr("select return 0, no data ready,continue");
+			  continue;
+		  }
+		  else if(ret>0)
+		  {
+
+			  for(int i=0;i<curConnNum;i++)
 			  {
-				  receiveData(i);
+				  if(FD_ISSET(conns[i],&rds))
+				  {
+					  receiveData(i);
+				  }
+				  if(FD_ISSET(conns[i],&wts))
+				  {
+					  if(strlen(bufsWrite[i])>0)
+						  sendData(i);
+				  }
 			  }
-			  if(FD_ISSET(conns[i],&wts))
+
+			  if(FD_ISSET(sockfd,&rds))
 			  {
-				  if(strlen(bufsWrite[i])>0)
-					  sendData(i);
+
+				  conns[curConnNum]=accept(sockfd,NULL,NULL);
+				 // memset(bufsRead[curConnNum],0,MAX);
+				  //memset(bufsWrite[curConnNum],0,MAX);
+				  if(conns[curConnNum]>0)
+				  {
+					  //if(bufsRead[curConnNum]!=NULL)
+					  {
+						  bufsRead[curConnNum]=(char *)malloc(sizeof(char )*MAX);
+					  }
+					  //if(bufsWrite[curConnNum]!=NULL)
+					  {
+						  bufsWrite[curConnNum]=(char *)malloc(sizeof(char )*MAX);
+					  }
+					  curConnNum++;
+					  printf("a new client connected\n");
+				  }
 			  }
 		  }
-
-		  if(FD_ISSET(sockfd,&rds))
-		  {
-
-			  conns[curConnNum]=accept(sockfd,NULL,NULL);
-			 // memset(bufsRead[curConnNum],0,MAX);
-			  //memset(bufsWrite[curConnNum],0,MAX);
-			  if(conns[curConnNum]>0)
-			  {
-				  //if(bufsRead[curConnNum]!=NULL)
-				  {
-					  bufsRead[curConnNum]=(char *)malloc(sizeof(char )*MAX);
-				  }
-				  //if(bufsWrite[curConnNum]!=NULL)
-				  {
-					  bufsWrite[curConnNum]=(char *)malloc(sizeof(char )*MAX);
-				  }
-				  curConnNum++;
-				  printf("a new client connected\n");
-			  }
-		  }
-	  }
-	  	
+			
 
 	  }
      }
