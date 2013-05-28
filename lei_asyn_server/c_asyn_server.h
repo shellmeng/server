@@ -121,6 +121,18 @@ class Iterative_Server:public Server
 
 /*****************************************************************************/
 /*****************************************************************************/
+
+class Asyn_Server:pulbic Server
+{
+	public:
+		int run();
+		int init();
+		int handleConnection();
+		int handleData(SocketStream &);
+		int waitfor_multievent();
+};
+/*****************************************************************************/
+/*****************************************************************************/
 int buildConnection(int port);
 
 int echo(int conn);
