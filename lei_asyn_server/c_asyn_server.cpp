@@ -201,6 +201,66 @@ int Iterative_Server::run()
 
 }
 
+/********************************************************************************************/
+/********************************************************************************************/
+
+int Asyn_Server::init()
+{
+	NetAddress *na=new NetAddress(host,port);
+	Socket * sock=new Socket();
+        bind(sock->sockfd,na->SAserverAddr,sizeof(na->serverAddr));
+	listen(sock->sockfd,LISTENQUE);
+	return sock->sockfd;
+}
+
+int Asyn_Server::waitfor_multievent()
+{}
+
+int Asyn_Server::handleConnection()
+{}
+
+int Asyn_Server::handleData(SocketStream &ss)
+{}
+
+int Asyn_Server::run()
+{
+
+
+	int retsock;
+	if( (retsock=init())<=0)
+	{
+		outerr("server init error, exit");
+		exit(0);
+	}
+
+	fprintf(stdout, "the server run:\n");
+
+	
+	SocketStream ss;
+	for(;;)
+	{
+
+		acceptor(retsock,ss);
+		if(waitfor_multievent()==-1)
+			return -1;
+		if(handleConnection()==-1)
+			return -1;
+		if(handleData(ss)==-1)
+			return -1;
+	}
+
+
+}
+
+
+
+
+
+
+
+
+/********************************************************************************************/
+/********************************************************************************************/
 int buildConnection(int port)
 {
      int sockfd;
